@@ -1,0 +1,6 @@
+# blank_issues_enabled: false → 빈 이슈 금지(템플릿 강제). 필요 시 true.
+blank_issues_enabled: false
+# contact_links:
+#   - name: 보안 취약점
+#     url: mailto:security@example.com
+#     about: 공개 이슈 대신 비공개로 보고

@@ -1,0 +1,18 @@
+name: 🔧 작업 / 잡무
+description: 리팩터 · 문서 · 설정 등 작업 항목
+title: "chore: "
+labels: [chore]
+body:
+  - type: textarea
+    id: task
+    attributes:
+      label: 할 일
+      description: 무엇을 하는가
+    validations:
+      required: true
+  - type: textarea
+    id: done
+    attributes:
+      label: 완료 조건 (선택)
+      placeholder: |
+        - [ ] ...

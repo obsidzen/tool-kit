@@ -1,0 +1,36 @@
+name: 🐛 버그 리포트
+description: 잘못 동작하는 것을 보고
+title: "bug: "
+labels: [bug]
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: 무엇이 / 기대 동작
+      description: 무슨 일이 일어났고, 기대한 동작은 무엇인가
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: 재현 절차
+      placeholder: |
+        1. ...
+        2. ...
+        3. 결과:
+    validations:
+      required: true
+  - type: textarea
+    id: env
+    attributes:
+      label: 환경
+      description: OS / 버전 / 디바이스 등
+  - type: dropdown
+    id: priority
+    attributes:
+      label: 우선순위(제안)
+      description: 최종 priority 라벨은 트리아지 때 부여
+      options:
+        - "p1 (보통)"
+        - "p0 (긴급)"
+        - "p2 (낮음)"

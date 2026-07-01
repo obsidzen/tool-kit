@@ -1,0 +1,68 @@
+# run-kit
+
+obsidzen Go 도구가 외부 프로세스를 실행할 때 쓰는 **주입형 Runner** 모듈. 실제 실행은 `ExecRunner`, 테스트는 fake runner로 바꿔 명령 시퀀스를 검증한다.
+
+역할 경계: [tool-kit README](../README.md).
+
+## API
+- `runkit.CommandSpec` — 실행 디렉터리, 명령, 인자, 선택적 환경변수
+- `runkit.Task` — 하나의 사용자 action에 대응하는 단일 command, command sequence, 또는 Go stream function. `Description`은 메뉴 한 줄 설명, `Detail`은 TUI/CLI 상세 설명에 쓴다.
+- `runkit.Runner` — `Run`, `Stream`
+- `runkit.ExecRunner` — `os/exec` 기반 기본 구현
+- `runkit.MergeEnv(map[string]string)` — 현재 환경에 override를 병합
+- `runkit.StreamTo(ctx, runner, spec, writer)` — stream command output to a writer
+- `runkit.StreamLines(ctx, runner, spec)` — command output을 line channel로 변환해 TUI tail 화면에 연결
+- `runkit.TaskSpecs`, `TaskWithArgs`, `RunTask`, `StreamTaskTo`, `StreamTaskLines` — task sequence 실행과 streaming
+- `runkit.StreamTaskLinesWithFormatter(ctx, runner, task, formatter)` — TUI tail에 표시되는 `$ command...` 라인을 tool별 formatter/redactor로 바꿔 streaming
+- `runkit.CommandLine(spec)` — 표시용 command line 렌더링
+- `runkit.RedactCommandLine(spec, sensitiveFlags...)` — `--password value` 같은 flag 다음 인자를 표시용 command line에서 `********`로 마스킹
+
+## 사용
+```go
+runner := runkit.ExecRunner{}
+out, err := runner.Run(ctx, runkit.CommandSpec{
+    Dir:  projectDir,
+    Name: "adb",
+    Args: []string{"devices"},
+    Env:  os.Environ(),
+})
+```
+
+```go
+task := runkit.Task{
+    Key: "deploy",
+    Description: "deploy workers",
+    Detail: "Runs env checks and deploys the Workers runtime.",
+    Specs: []runkit.CommandSpec{
+        {Dir: projectDir, Name: "npm", Args: []string{"run", "env:schema:check"}},
+        {Dir: projectDir, Name: "npm", Args: []string{"run", "workers:deploy"}},
+    },
+}
+err := runkit.StreamTaskTo(ctx, runner, task, os.Stdout)
+```
+
+Go 함수로 구현된 task도 같은 TUI/CLI stream 경로를 쓸 수 있다.
+
+```go
+task := runkit.Task{
+    Key: "verify",
+    Description: "verify generated files",
+    Stream: func(ctx context.Context) (<-chan runkit.Line, error) {
+        lines := make(chan runkit.Line, 1)
+        go func() {
+            defer close(lines)
+            lines <- runkit.Line{Text: "ok"}
+            lines <- runkit.Line{Done: true}
+        }()
+        return lines, nil
+    },
+}
+```
+
+TUI에서 실행 command를 보여줄 때 secret 인자가 있으면 formatter를 넘긴다.
+
+```go
+lines, err := runkit.StreamTaskLinesWithFormatter(ctx, runner, task, func(spec runkit.CommandSpec) string {
+    return runkit.RedactCommandLine(spec, "--password", "--token", "--db-url")
+})
+```

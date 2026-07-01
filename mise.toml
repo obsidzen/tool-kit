@@ -1,0 +1,3 @@
+# tool-kit development tool versions.
+[tools]
+go = "1.26"

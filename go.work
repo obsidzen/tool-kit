@@ -1,0 +1,7 @@
+go 1.26
+
+use (
+	./cli-kit
+	./run-kit
+	./tui-kit
+)

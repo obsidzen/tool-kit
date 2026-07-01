@@ -1,0 +1,11 @@
+name: ❓ 질문 / 문서
+description: 질문 또는 문서 개선
+title: "docs: "
+labels: [docs]
+body:
+  - type: textarea
+    id: body
+    attributes:
+      label: 질문 / 내용
+    validations:
+      required: true
