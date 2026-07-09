@@ -53,8 +53,8 @@ Keep APIs small, explicit, and tool-agnostic.
 
 ```go
 type Runner interface {
-	Run(ctx context.Context, spec CommandSpec) ([]byte, error)
-	Stream(ctx context.Context, spec CommandSpec) (<-chan Line, error)
+ Run(ctx context.Context, spec CommandSpec) ([]byte, error)
+ Stream(ctx context.Context, spec CommandSpec) (<-chan Line, error)
 }
 ```
 
@@ -78,6 +78,7 @@ type Runner interface {
 Use GitHub-flow, Conventional Commits, squash merge by default, and SemVer module tags.
 
 - Default branch: `main`.
+- **MUST: never edit or commit directly on `main`.** Create a `<type>/<summary>` work branch (`git switch -c <type>/<summary>`) before the first change, then land it via PR (squash). This binds every agent; it is not advisory. If you are already on `main` with uncommitted changes, branch first — `git switch -c` carries the working changes onto the new branch.
 - Work branches: `<type>/<issue#>-<kebab-summary>`; issue number may be omitted.
 - Commit format: `<type>(<scope>): <subject>`.
 - Types: `feat fix docs refactor test chore build ci perf style revert`.

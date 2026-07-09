@@ -5,6 +5,7 @@ obsidzen Go 도구가 외부 프로세스를 실행할 때 쓰는 **주입형 Ru
 역할 경계: [tool-kit README](../README.md).
 
 ## API
+
 - `runkit.CommandSpec` — 실행 디렉터리, 명령, 인자, 선택적 환경변수
 - `runkit.Task` — 하나의 사용자 action에 대응하는 단일 command, command sequence, 또는 Go stream function. `Description`은 메뉴 한 줄 설명, `Detail`은 TUI/CLI 상세 설명에 쓴다.
 - `runkit.Runner` — `Run`, `Stream`
@@ -18,6 +19,7 @@ obsidzen Go 도구가 외부 프로세스를 실행할 때 쓰는 **주입형 Ru
 - `runkit.RedactCommandLine(spec, sensitiveFlags...)` — `--password value` 같은 flag 다음 인자를 표시용 command line에서 `********`로 마스킹
 
 ## 사용
+
 ```go
 runner := runkit.ExecRunner{}
 out, err := runner.Run(ctx, runkit.CommandSpec{

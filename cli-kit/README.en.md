@@ -5,6 +5,7 @@
 Shared **CLI components** for obsidzen Go + Cobra tools. It provides common root command setup, action command registration, shell completion commands, and enum completion helpers.
 
 ## API
+
 - `clikit.NewRoot(opts clikit.RootOptions) *clikit.Command` — creates a common root command
 - `clikit.NewCommand(opts clikit.CommandOptions) *clikit.Command` — creates a common subcommand
 - `clikit.Action` — action command definition with `key`, `description`, `detail`, `aliases`, and `RunE`/`RunArgsE`
@@ -20,6 +21,7 @@ Shared **CLI components** for obsidzen Go + Cobra tools. It provides common root
 - `clikit.Execute(root)` — common error output and exit handling
 
 ## Usage
+
 ```go
 root := clikit.NewRoot(clikit.RootOptions{
     Use:   "my-tool",
