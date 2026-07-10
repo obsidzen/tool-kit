@@ -1,14 +1,14 @@
 // Workspace house rule: no circled/enclosed alphanumerics (U+2460..U+24FF, e.g.
 // the circled digits) as position labels. They break when content re-orders
-// ("as in the second") and render inconsistently. Use markdown ordered lists,
-// "(1)" inline, or names. Banned everywhere including README. Mirrors the
-// retired tools/doc-lint.sh.
+// ("as in the second") and render inconsistently. Use markdown ordered lists
+// (1., 2.) or prose, not enclosed or parenthesized numbers. Banned everywhere
+// including README. Mirrors the retired grep tools/doc-lint.sh.
 const CIRCLED = new RegExp("[\\u2460-\\u24FF]", "gu");
 
 export default {
   names: ["ws-no-circled"],
   description:
-    "Circled/enclosed alphanumerics are not allowed - use markdown lists, (1), or names",
+    "Circled/enclosed alphanumerics are not allowed - use markdown lists (1., 2.) or prose",
   tags: ["ws", "style"],
   parser: "none",
   function: (params, onError) => {
@@ -21,7 +21,7 @@ export default {
           detail:
             'Disallowed circled character "' +
             match[0] +
-            '" - use "1." / "(1)" / names.',
+            '" - use a "1." list or prose.',
           context: line.trim().slice(0, 40),
         });
       }
