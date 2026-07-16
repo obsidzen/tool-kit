@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+# Pre-commit gate (workspace convention): secret backstop + doc gates.
+# Blocks committing likely secrets; and, if the markdownlint bundle is present,
+# fails on markdownlint errors or broken links in staged .md. Defense in depth -
+# the durable gate is CI. Activate with `scripts/setup.sh` (sets core.hooksPath).
+# Needs node/npx for the doc gates. Bypass in emergencies with `git commit --no-verify`.
+set -uo pipefail
+
+staged=$(git diff --cached --name-only --diff-filter=AM)
+[ -z "$staged" ] && exit 0
+
+bad_names=$(printf '%s\n' "$staged" \
+  | grep -Ei '(^|/)\.env($|\.)|\.pem$|\.key$|(^|/)id_(rsa|ed25519)$' || true)
+if [ -n "$bad_names" ]; then
+  echo "pre-commit BLOCKED: secret-like files staged:" >&2
+  printf '%s\n' "$bad_names" | sed 's/^/  /' >&2
+  exit 1
+fi
+
+if git diff --cached -U0 --diff-filter=AM \
+   | grep -qE 'BEGIN (RSA|OPENSSH|EC|DSA|PGP) PRIVATE KEY|AKIA[0-9A-Z]{16}'; then
+  echo "pre-commit BLOCKED: private-key/credential pattern in staged diff." >&2
+  exit 1
+fi
+
+# Doc gates - if any Markdown is staged, enforce markdownlint + link integrity.
+if printf '%s\n' "$staged" | grep -q '\.md$'; then
+  if [ -f tools/doc-lint.sh ]  && ! bash tools/doc-lint.sh;  then
+    echo "pre-commit BLOCKED: doc-lint failed (fix markdownlint errors above)." >&2; exit 1
+  fi
+  if [ -f tools/doc-check.sh ] && ! bash tools/doc-check.sh; then
+    echo "pre-commit BLOCKED: doc-check failed (broken .md links above)." >&2; exit 1
+  fi
+fi
+exit 0
