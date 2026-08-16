@@ -102,6 +102,12 @@ func StreamTaskTo(ctx context.Context, runner Runner, task Task, writer io.Write
 		return nil
 	}
 	for _, spec := range TaskSpecs(task) {
+		// TUI 경로(StreamTaskLinesWithFormatter)와 같은 머리글을 단다. 여러 단계를
+		// 잇는 작업에서 이것이 없으면 출력이 한 덩어리로 쏟아져, 실패했을 때 어느
+		// 단계였는지 로그만 보고는 알 수 없다.
+		if _, err := io.WriteString(writer, "$ "+CommandLine(spec)+"\n"); err != nil {
+			return err
+		}
 		if err := StreamTo(ctx, runner, spec, writer); err != nil {
 			return err
 		}
