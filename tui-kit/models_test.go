@@ -214,3 +214,40 @@ func (r fakeRunMenuRunner) Run(ctx context.Context, spec runkit.CommandSpec) ([]
 func (r fakeRunMenuRunner) Stream(ctx context.Context, spec runkit.CommandSpec) (io.ReadCloser, func() error, error) {
 	return io.NopCloser(strings.NewReader(r.output)), func() error { return nil }, nil
 }
+
+func TestFormHandleKeyCoversNavigationAndSubmit(t *testing.T) {
+	form := FormModel{Fields: []FormField{
+		{Key: "name", Label: "Name"},
+		{Key: "mode", Label: "Mode", Options: []string{"a", "b"}, Value: "a"},
+	}}
+
+	next, submitted, handled := form.HandleKey("tab")
+	if !handled || submitted || next.Index != 1 {
+		t.Fatalf("tab should move focus: index=%d submitted=%v handled=%v", next.Index, submitted, handled)
+	}
+
+	cycled, _, _ := next.HandleKey("space")
+	if cycled.Value("mode") != "b" {
+		t.Fatalf("space should cycle an option field, got %q", cycled.Value("mode"))
+	}
+
+	_, submitted, _ = form.HandleKey("enter")
+	if !submitted {
+		t.Fatalf("enter should report submission")
+	}
+}
+
+func TestFormHandleKeyLeavesUnknownKeysToTheCaller(t *testing.T) {
+	form := FormModel{Fields: []FormField{{Key: "name", Label: "Name", Value: "ab"}}}
+
+	// The caller still owns text editing, so a rune key must come back unhandled
+	// rather than being silently swallowed or double-applied.
+	next, submitted, handled := form.HandleKey("c")
+
+	if handled || submitted {
+		t.Fatalf("handled=%v submitted=%v, want both false", handled, submitted)
+	}
+	if next.Value("name") != "ab" {
+		t.Fatalf("value = %q, want it untouched", next.Value("name"))
+	}
+}

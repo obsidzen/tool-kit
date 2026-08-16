@@ -137,23 +137,108 @@ func (m ResultModel) View(width int) string {
 	return Screen(width, m.Title, strings.TrimSpace(body), Footer(m.Status, help))
 }
 
+// DefaultTailMax 는 보관하는 로그 줄 수의 기본 상한.
+// 되짚어 보려면 화면에 보이는 것보다 훨씬 많이 남겨야 한다 — 한 번의 자산 재생성이
+// 수천 줄을 내므로 화면 높이(수십 줄) 기준으로 자르면 스크롤할 것이 남지 않는다.
+const DefaultTailMax = 5000
+
 type TailModel struct {
 	Title string
 	Lines []string
 	Max   int
 	Empty string
 	Help  string
+
+	// Height 는 본문에 그릴 수 있는 줄 수. 0이면 전부 그린다(크기 통지 전).
+	Height int
+
+	// Offset 은 바닥에서 위로 몇 줄 올라가 있는지. 0이면 바닥에 붙어 있고,
+	// 그때만 새 줄을 따라간다. 위로 올린 상태에서 출력이 계속되어도 보던 자리가
+	// 밀려나지 않아야 로그를 읽을 수 있다.
+	Offset int
 }
 
-func (m TailModel) Append(line string) TailModel {
+func (m TailModel) max() int {
 	if m.Max <= 0 {
-		m.Max = 400
+		return DefaultTailMax
 	}
-	if len(m.Lines) >= m.Max {
-		m.Lines = m.Lines[len(m.Lines)-m.Max+1:]
-	}
+	return m.Max
+}
+
+// AtBottom 은 새 줄을 따라가는 상태인지.
+func (m TailModel) AtBottom() bool { return m.Offset <= 0 }
+
+func (m TailModel) Append(line string) TailModel {
+	limit := m.max()
+	following := m.AtBottom()
 	m.Lines = append(m.Lines, line)
+	if dropped := len(m.Lines) - limit; dropped > 0 {
+		m.Lines = m.Lines[dropped:]
+	}
+	if following {
+		return m
+	}
+	// 오프셋은 바닥에서 센 거리이므로, 위로 올려둔 상태에서 새 줄이 오면 그만큼
+	// 키워야 보던 자리에 머문다. 상한에 걸려 앞줄이 잘려나갈 때도 인덱스가 하나씩
+	// 밀리므로 같은 보정이 맞는다. 잘려나가 사라진 줄까지는 따라갈 수 없으니
+	// 가장 오래된 줄에서 멈춘다.
+	m.Offset++
+	if top := m.maxOffset(); m.Offset > top {
+		m.Offset = top
+	}
 	return m
+}
+
+// maxOffset 은 가장 위까지 올렸을 때의 오프셋.
+func (m TailModel) maxOffset() int {
+	if m.Height <= 0 {
+		return 0
+	}
+	if hidden := len(m.Lines) - m.Height; hidden > 0 {
+		return hidden
+	}
+	return 0
+}
+
+func (m TailModel) ScrollUp(lines int) TailModel {
+	m.Offset += lines
+	if limit := m.maxOffset(); m.Offset > limit {
+		m.Offset = limit
+	}
+	return m
+}
+
+func (m TailModel) ScrollDown(lines int) TailModel {
+	m.Offset -= lines
+	if m.Offset < 0 {
+		m.Offset = 0
+	}
+	return m
+}
+
+func (m TailModel) ScrollTop() TailModel {
+	m.Offset = m.maxOffset()
+	return m
+}
+
+func (m TailModel) ScrollBottom() TailModel {
+	m.Offset = 0
+	return m
+}
+
+// Window 는 현재 오프셋에서 보이는 줄과, 그 아래로 감춰진 줄 수를 돌려준다.
+func (m TailModel) Window() (visible []string, below int) {
+	if m.Height <= 0 || len(m.Lines) <= m.Height {
+		return m.Lines, 0
+	}
+	end := len(m.Lines) - m.Offset
+	if end > len(m.Lines) {
+		end = len(m.Lines)
+	}
+	if end < m.Height {
+		end = m.Height
+	}
+	return m.Lines[end-m.Height : end], len(m.Lines) - end
 }
 
 func (m TailModel) View(width int) string {
@@ -317,6 +402,31 @@ func (m FormModel) Values() map[string]string {
 		values[field.Key] = field.Value
 	}
 	return values
+}
+
+// HandleKey 는 폼의 이동·편집 키를 처리한다. submitted 가 true 면 enter 가
+// 눌린 것이고, 호출자는 값을 읽어 자기 화면으로 넘어가면 된다. handled 가 false 면
+// 폼과 무관한 키이므로 호출자가 취소·종료 등으로 처리한다.
+//
+// 이 대응표는 폼을 쓰는 화면마다 똑같이 필요해서 각자 복제되기 쉽다. 복제되면
+// 화면마다 조작이 미묘하게 갈라지므로 여기서 한 벌만 정의한다.
+func (m FormModel) HandleKey(key string) (next FormModel, submitted bool, handled bool) {
+	switch {
+	case key == "up" || key == "down":
+		return m.UpdateKey(key), false, true
+	case key == "tab":
+		return m.FocusNext(), false, true
+	case key == "shift+tab":
+		return m.FocusPrev(), false, true
+	case (key == " " || key == "space") && m.FieldHasOptions():
+		return m.CycleValue(), false, true
+	case key == "enter":
+		return m, true, true
+	}
+	// 폼이 모르는 키다. 텍스트 편집이나 취소는 화면마다 다르므로 그대로 돌려준다.
+	// 여기서 handled 를 참으로 돌려주면 호출자가 자기 처리를 건너뛰거나, 반대로
+	// 폼이 이미 소비한 키를 한 번 더 처리하게 된다.
+	return m, false, false
 }
 
 func (m FormModel) View(width int) string {

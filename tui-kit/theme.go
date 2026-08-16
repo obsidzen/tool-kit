@@ -26,6 +26,8 @@ const (
 	HelpEnterEscQuit     = "enter select · esc back · q quit"
 	HelpEnterOpenEscQuit = "enter open · esc back · q quit"
 	HelpAnyHomeQuit      = "any key home · q quit"
+	// 로그 화면은 스크롤 키를 소비하므로 복귀 키를 명시해야 한다.
+	HelpTailScrollQuit = "↑/↓ scroll · pgup/pgdn page · home/end jump · esc home · q quit"
 )
 
 // ChromeHeight 는 Screen 프레임(테두리+제목+구분선+여백+푸터)이 쓰는 세로 줄 수.
@@ -167,12 +169,31 @@ func TextScreen(width int, title, body, status, help string) string {
 }
 
 // TailScreen renders streaming tail-style lines, keeping only the last max lines.
+//
+// Deprecated: 스크롤 위치를 표현할 수 없다. 되짚어 볼 수 있는 로그에는
+// TailWindowScreen 을 쓴다.
 func TailScreen(width int, title string, lines []string, empty, status, help string, max int) string {
 	body := strings.Join(lines, "\n")
 	if body == "" {
 		body = Status.Render(empty)
 	}
 	return TextScreen(width, title, TrimLines(body, max), status, help)
+}
+
+// TailWindowScreen 은 이미 잘라낸 창(visible)만 그리고, 아래에 남은 줄이 있으면
+// 그 수를 알린다.
+//
+// 바닥에 붙어 있을 때는 아무 표시도 하지 않는다 — 평소 상태에 표식을 남기면
+// 정작 위로 올라가 있다는 신호가 묻힌다.
+func TailWindowScreen(width int, title string, visible []string, below int, empty, status, help string) string {
+	body := strings.Join(visible, "\n")
+	if body == "" {
+		body = Status.Render(empty)
+	}
+	if below > 0 {
+		body += "\n" + Status.Render(fmt.Sprintf("%s %d more line(s) below", GlyphWarn, below))
+	}
+	return TextScreen(width, title, body, status, help)
 }
 
 func IsQuitKey(key string) bool {
