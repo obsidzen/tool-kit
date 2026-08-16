@@ -404,6 +404,29 @@ func (m FormModel) Values() map[string]string {
 	return values
 }
 
+// HandleKey 는 폼의 이동·편집 키를 처리한다. submitted 가 true 면 enter 가
+// 눌린 것이고, 호출자는 값을 읽어 자기 화면으로 넘어가면 된다. handled 가 false 면
+// 폼과 무관한 키이므로 호출자가 취소·종료 등으로 처리한다.
+//
+// 이 대응표는 폼을 쓰는 화면마다 똑같이 필요해서 각자 복제되기 쉽다. 복제되면
+// 화면마다 조작이 미묘하게 갈라지므로 여기서 한 벌만 정의한다.
+func (m FormModel) HandleKey(key string) (next FormModel, submitted bool, handled bool) {
+	switch {
+	case key == "up" || key == "down":
+		return m.UpdateKey(key), false, true
+	case key == "tab":
+		return m.FocusNext(), false, true
+	case key == "shift+tab":
+		return m.FocusPrev(), false, true
+	case (key == " " || key == "space") && m.FieldHasOptions():
+		return m.CycleValue(), false, true
+	case key == "enter":
+		return m, true, true
+	}
+	// 남은 키는 현재 필드의 텍스트 편집으로 넘긴다.
+	return m.UpdateKey(key), false, true
+}
+
 func (m FormModel) View(width int) string {
 	rows := make([]KV, len(m.Fields))
 	for i, field := range m.Fields {
