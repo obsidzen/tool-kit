@@ -86,3 +86,22 @@ func TestRedactCommandLine(t *testing.T) {
 		t.Fatalf("redacted line = %q", got)
 	}
 }
+
+func TestStreamTaskToLabelsEachStep(t *testing.T) {
+	task := Task{Key: "two-steps", Specs: []CommandSpec{
+		{Name: "echo", Args: []string{"first"}},
+		{Name: "echo", Args: []string{"second"}},
+	}}
+	var out strings.Builder
+
+	if err := StreamTaskTo(context.Background(), ExecRunner{}, task, &out); err != nil {
+		t.Fatalf("StreamTaskTo error: %v", err)
+	}
+
+	// Without the headers a failing multi-step run gives no clue which step broke.
+	for _, want := range []string{"$ echo first", "first", "$ echo second", "second"} {
+		if !strings.Contains(out.String(), want) {
+			t.Fatalf("output missing %q:\n%s", want, out.String())
+		}
+	}
+}
