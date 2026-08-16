@@ -5,6 +5,7 @@
 Injectable process runner module for obsidzen Go tools. Production code uses `ExecRunner`; tests can swap in fake runners to verify command sequences.
 
 ## API
+
 - `runkit.CommandSpec` — working directory, command, arguments, and optional environment
 - `runkit.Task` — one user action backed by a single command, a command sequence, or a Go stream function. `Description` is the one-line menu text; `Detail` is for TUI/CLI detail help.
 - `runkit.Runner` — `Run`, `Stream`
@@ -18,6 +19,7 @@ Injectable process runner module for obsidzen Go tools. Production code uses `Ex
 - `runkit.RedactCommandLine(spec, sensitiveFlags...)` — mask the argument after flags such as `--password value` in display command lines
 
 ## Usage
+
 ```go
 runner := runkit.ExecRunner{}
 out, err := runner.Run(ctx, runkit.CommandSpec{

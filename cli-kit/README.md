@@ -5,6 +5,7 @@ obsidzen CLI 도구(Go + Cobra)가 공유하는 **CLI 부품** 모듈. 공통 ro
 역할 경계: [tool-kit README](../README.md).
 
 ## API
+
 - `clikit.NewRoot(opts clikit.RootOptions) *clikit.Command` — 공통 root command 생성
 - `clikit.NewCommand(opts clikit.CommandOptions) *clikit.Command` — 공통 subcommand 생성
 - `clikit.Action` — `key`, `description`, `detail`, `aliases`, `RunE`/`RunArgsE` 기반 action command 정의
@@ -20,6 +21,7 @@ obsidzen CLI 도구(Go + Cobra)가 공유하는 **CLI 부품** 모듈. 공통 ro
 - `clikit.Execute(root)` — 공통 에러 출력 후 종료
 
 ## 사용
+
 ```go
 root := clikit.NewRoot(clikit.RootOptions{
     Use:   "my-tool",

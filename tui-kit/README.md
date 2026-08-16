@@ -5,6 +5,7 @@ obsidzen CLI 도구(Go + Bubble Tea)가 공유하는 **TUI 부품** 모듈. Bubb
 버전은 `VERSION` 파일과 module tag로 관리한다.
 
 ## API
+
 - `tuikit.Model/Msg/Cmd/KeyMsg/WindowSizeMsg/QuitMsg` — Bubble Tea 타입 alias
 - `tuikit.RunAltScreen(model)` — 표준 alt-screen 실행
 - `tuikit.ExecProcess(cmd, fn)`, `tuikit.QuitCmd()` — Bubble Tea command helper
@@ -37,12 +38,14 @@ obsidzen CLI 도구(Go + Bubble Tea)가 공유하는 **TUI 부품** 모듈. Bubb
 - 글리프: `GlyphStep/OK/Warn/Err`, `ChromeHeight`
 
 ## 사용 규칙
+
 - tool 코드는 Bubble Tea/Bubbles를 직접 import하지 않고 `tui-kit`의 공개 API를 통해 사용한다. 새 Bubble Tea/Bubbles 기능이 필요하면 먼저 `tui-kit`에 adapter나 reusable model로 올린 뒤 tool에서 소비한다.
 - 선택/읽기전용/결과/tail/확인/form 상태는 먼저 reusable model로 표현한다. 도메인별 label 변환만 tool 내부에 둔다.
 - `internal/tui/theme.go`는 `tui-kit` symbol을 로컬 별칭으로 재노출하는 shim만 둔다.
 - 높은 수준의 입력/목록 컴포넌트가 필요한 경우에도 navigation/value 상태는 가능한 reusable model에 맡기고, 컴포넌트는 렌더링·입력 처리 adapter로 감싼다.
 
 ## 사용
+
 ```go
 import tuikit "github.com/obsidzen/tool-kit/tui-kit"
 // go.mod: require github.com/obsidzen/tool-kit/tui-kit v0.1.0

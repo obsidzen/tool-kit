@@ -16,9 +16,9 @@ Shared Go modules for building small operational CLI/TUI tools.
 
 ```go
 import (
-	clikit "github.com/obsidzen/tool-kit/cli-kit"
-	runkit "github.com/obsidzen/tool-kit/run-kit"
-	tuikit "github.com/obsidzen/tool-kit/tui-kit"
+ clikit "github.com/obsidzen/tool-kit/cli-kit"
+ runkit "github.com/obsidzen/tool-kit/run-kit"
+ tuikit "github.com/obsidzen/tool-kit/tui-kit"
 )
 ```
 

@@ -53,8 +53,8 @@ Keep APIs small, explicit, and tool-agnostic.
 
 ```go
 type Runner interface {
-	Run(ctx context.Context, spec CommandSpec) ([]byte, error)
-	Stream(ctx context.Context, spec CommandSpec) (<-chan Line, error)
+ Run(ctx context.Context, spec CommandSpec) ([]byte, error)
+ Stream(ctx context.Context, spec CommandSpec) (<-chan Line, error)
 }
 ```
 
@@ -62,8 +62,9 @@ type Runner interface {
 - Keep command execution behind `run-kit.Runner` when behavior needs tests.
 - Use English for code identifiers, package docs, CLI-facing API names, and commit messages.
 - Keep README source in Korean and maintain `README.en.md` for public surface docs.
-- Code comments should explain invariants or non-obvious behavior, not restate code.
-- Do not reference external workspace paths or issue numbers in code comments.
+- Comments: default to none — first remove the need with a better name, an extraction, or a type; comment only the leftover *why* (intent, invariant, hazard, rejected alternative, non-obvious constraint). Never restate code, narrate steps ("now validate X"), leave commented-out code, or add section banners. Safety-critical invariants (security, concurrency, external-bug workarounds) MUST be commented. Write code comments in English.
+- Public API uses the language's doc-comment (docstring/JSDoc/Go doc) for the caller contract; inline comments carry the *why* for maintainers.
+- Do not put external tracker IDs, issue numbers, or ADR IDs in code comments. Put the reason inline; traceability belongs in commits, PRs, and docs.
 
 ## Testing
 
@@ -78,6 +79,7 @@ type Runner interface {
 Use GitHub-flow, Conventional Commits, squash merge by default, and SemVer module tags.
 
 - Default branch: `main`.
+- **MUST: never edit or commit directly on `main`.** Create a `<type>/<summary>` work branch (`git switch -c <type>/<summary>`) before the first change, then land it via PR (squash). This binds every agent; it is not advisory. If you are already on `main` with uncommitted changes, branch first — `git switch -c` carries the working changes onto the new branch.
 - Work branches: `<type>/<issue#>-<kebab-summary>`; issue number may be omitted.
 - Commit format: `<type>(<scope>): <subject>`.
 - Types: `feat fix docs refactor test chore build ci perf style revert`.

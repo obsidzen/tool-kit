@@ -1,0 +1,29 @@
+{
+  // Workspace-wide Markdown consistency. Standard markdownlint hygiene +
+  // house custom rules (no-emoji, no-circled). Single source of this config:
+  // docs/templates/markdownlint/ in the workspace.
+  "config": {
+    "default": true,
+    "MD013": false, // line length: off (prose/tables/Korean wrap freely)
+    "MD033": false, // inline HTML: allowed
+    "MD041": false, // first line need not be a top-level heading
+    "MD036": false, // bold labels are intentional lead-ins, not headings
+    "MD060": false, // table pipe visual alignment impossible with CJK width (padding normalized by --fix)
+    "MD024": { "siblings_only": true }, // duplicate headings ok if not siblings
+    "MD029": { "style": "ordered" }, // ordered lists use 1. 2. 3. (code-style §4)
+    "MD007": { "indent": 2 }
+  },
+  "customRules": [
+    "./tools/markdownlint/no-emoji.mjs",
+    "./tools/markdownlint/no-circled.mjs"
+  ],
+  "ignores": [
+    "**/node_modules/**",
+    "**/legacy/**",
+    "CLAUDE.md",
+    "GEMINI.md"
+  ],
+  // Respect .gitignore so build/dependency caches (.cache, vendor, target, dist)
+  // and other ignored files are never linted or --fixed (avoids read-only EACCES).
+  "gitignore": true
+}
