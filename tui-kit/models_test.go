@@ -236,3 +236,18 @@ func TestFormHandleKeyCoversNavigationAndSubmit(t *testing.T) {
 		t.Fatalf("enter should report submission")
 	}
 }
+
+func TestFormHandleKeyLeavesUnknownKeysToTheCaller(t *testing.T) {
+	form := FormModel{Fields: []FormField{{Key: "name", Label: "Name", Value: "ab"}}}
+
+	// The caller still owns text editing, so a rune key must come back unhandled
+	// rather than being silently swallowed or double-applied.
+	next, submitted, handled := form.HandleKey("c")
+
+	if handled || submitted {
+		t.Fatalf("handled=%v submitted=%v, want both false", handled, submitted)
+	}
+	if next.Value("name") != "ab" {
+		t.Fatalf("value = %q, want it untouched", next.Value("name"))
+	}
+}

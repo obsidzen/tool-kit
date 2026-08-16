@@ -423,8 +423,10 @@ func (m FormModel) HandleKey(key string) (next FormModel, submitted bool, handle
 	case key == "enter":
 		return m, true, true
 	}
-	// 남은 키는 현재 필드의 텍스트 편집으로 넘긴다.
-	return m.UpdateKey(key), false, true
+	// 폼이 모르는 키다. 텍스트 편집이나 취소는 화면마다 다르므로 그대로 돌려준다.
+	// 여기서 handled 를 참으로 돌려주면 호출자가 자기 처리를 건너뛰거나, 반대로
+	// 폼이 이미 소비한 키를 한 번 더 처리하게 된다.
+	return m, false, false
 }
 
 func (m FormModel) View(width int) string {
