@@ -16,6 +16,7 @@ type RunMenuModel struct {
 	LanguageSelect SelectModel
 	Translator     Translator
 	Tail           TailModel
+	Height         int
 	Status         string
 	mode           runMenuMode
 	prev           runMenuMode
@@ -106,8 +107,24 @@ func (m RunMenuModel) Init() Cmd { return nil }
 
 func (m RunMenuModel) Update(msg Msg) (Model, Cmd) {
 	switch msg := msg.(type) {
+	case MouseMsg:
+		if m.mode == runMenuModeTail {
+			switch msg.Button {
+			case MouseButtonWheelUp:
+				m.Tail = m.Tail.ScrollUp(3)
+			case MouseButtonWheelDown:
+				m.Tail = m.Tail.ScrollDown(3)
+			}
+		}
+		return m, nil
 	case WindowSizeMsg:
 		m.Width = msg.Width
+		m.Height = msg.Height
+		// 로그 본문에 실제로 쓸 수 있는 줄 수. 프레임이 먹는 만큼 빼고,
+		// 스크롤 위치 안내 한 줄을 위해 하나 더 남긴다.
+		if body := msg.Height - ChromeHeight - 1; body > 0 {
+			m.Tail.Height = body
+		}
 	case KeyMsg:
 		key := msg.String()
 		if m.mode == runMenuModeDetail {
@@ -159,6 +176,12 @@ func (m RunMenuModel) Update(msg Msg) (Model, Cmd) {
 			if IsQuitKey(key) {
 				return m, QuitCmd()
 			}
+			// 스크롤 키는 화면을 닫지 않고 소비한다. 되짚어 보려고 위를 눌렀는데
+			// 로그가 닫히면 볼 방법 자체가 없어진다.
+			if next, ok := scrollTail(m.Tail, key); ok {
+				m.Tail = next
+				return m, nil
+			}
 			m.mode = runMenuModeMenu
 			m.cancel = nil
 			return m, nil
@@ -208,14 +231,14 @@ func (m RunMenuModel) Update(msg Msg) (Model, Cmd) {
 			m.Tail = m.Tail.Append(m.Status)
 			m.running = false
 			m.cancel = nil
-			m.Tail.Help = m.Translator.T("common.help.any_home_quit", HelpAnyHomeQuit)
+			m.Tail.Help = m.Translator.T("common.help.tail_scroll_quit", HelpTailScrollQuit)
 			return m, nil
 		}
 		if msg.done {
 			m.Status = GlyphOK + " " + m.Translator.T("common.status.completed", "completed")
 			m.running = false
 			m.cancel = nil
-			m.Tail.Help = m.Translator.T("common.help.any_home_quit", HelpAnyHomeQuit)
+			m.Tail.Help = m.Translator.T("common.help.tail_scroll_quit", HelpTailScrollQuit)
 			return m, nil
 		}
 		m.Tail = m.Tail.Append(msg.text)
@@ -243,7 +266,8 @@ func (m RunMenuModel) View() string {
 		)
 	}
 	if m.mode == runMenuModeTail {
-		return TailScreen(m.Width, m.Tail.Title, m.Tail.Lines, m.Tail.Empty, m.Status, m.Tail.Help, m.Tail.Max)
+		visible, below := m.Tail.Window()
+		return TailWindowScreen(m.Width, m.Tail.Title, visible, below, m.Tail.Empty, m.Status, m.Tail.Help)
 	}
 	status := m.Status
 	if status == "" {
@@ -295,4 +319,28 @@ func waitRunMenuLine(lines <-chan runkit.Line) Cmd {
 		}
 		return runMenuLineMsg{text: line.Text, err: line.Err, done: line.Done, lines: lines}
 	}
+}
+
+// scrollTail 은 로그 스크롤 키를 처리한다. 처리했으면 두 번째 값이 true 이고,
+// 호출자는 화면을 닫지 말아야 한다.
+func scrollTail(tail TailModel, key string) (TailModel, bool) {
+	page := tail.Height
+	if page <= 1 {
+		page = 10
+	}
+	switch {
+	case IsUpKey(key):
+		return tail.ScrollUp(1), true
+	case IsDownKey(key):
+		return tail.ScrollDown(1), true
+	case key == "pgup":
+		return tail.ScrollUp(page), true
+	case key == "pgdown":
+		return tail.ScrollDown(page), true
+	case key == "home":
+		return tail.ScrollTop(), true
+	case key == "end":
+		return tail.ScrollBottom(), true
+	}
+	return tail, false
 }
