@@ -26,6 +26,8 @@ Versioning uses the `VERSION` file and module tags.
 - `tuikit.SelectItemsFromStrings`, `SelectFromStrings`, `SelectItemsFromActions` — convert strings/actions into select models
 - `tuikit.TextScreen(...)`, `tuikit.TailScreen(...)`, `tuikit.TrimLines(...)` — read-only and log-tail screen helpers
 - `tuikit.RunTaskMenu(...)`, `RunTaskMenuWithVersion(...)`, `RunTaskMenuWithVersionAndCatalog(...)`, `RunTaskMenuWithVersionCatalogLanguage(...)`, `NewRunMenuModel(...)` — shared `run-kit` task menu with streaming output, language selection, and detail view
+- `RunMenuModel` renders `runkit.EventLine` through the same `Line.DisplayText`
+  path as CLI output. Domain messages must not add a TUI-only status prefix or icon.
 - `tuikit.IsQuitKey/IsBackKey/IsUpKey/IsDownKey` — shared key predicates
 - `tuikit.HelpSelectRunQuit`, `HelpEnterEscQuit`, `HelpEnterOpenEscQuit`, `HelpAnyHomeQuit` — shared help strings
 

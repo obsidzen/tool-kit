@@ -57,6 +57,20 @@ func TestTailModelAppendTrims(t *testing.T) {
 	}
 }
 
+func TestRunMenuUsesSharedEventRendering(t *testing.T) {
+	lines := make(chan runkit.Line, 1)
+	lines <- runkit.EventLine(runkit.Event{
+		PhaseID: "database",
+		Status:  runkit.StatusRunning,
+		Message: "Check database schema",
+	})
+	close(lines)
+	msg := waitRunMenuLine(lines)().(runMenuLineMsg)
+	if got, want := msg.text, "running database — Check database schema"; got != want {
+		t.Fatalf("text = %q, want %q", got, want)
+	}
+}
+
 func TestConfirmModelChoice(t *testing.T) {
 	m := ConfirmModel{Options: []ConfirmOption{{Key: "y"}, {Key: "n"}}, Help: "y yes · n no"}
 	if option, ok := m.Choice("y"); !ok || option.Key != "y" {

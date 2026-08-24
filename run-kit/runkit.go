@@ -32,9 +32,36 @@ type Runner interface {
 }
 
 type Line struct {
-	Text string
-	Err  error
-	Done bool
+	Text    string
+	Source  string
+	PhaseID string
+	Event   *Event
+	Err     error
+	Done    bool
+}
+
+// EventLine wraps a typed event for existing task stream channels.
+func EventLine(event Event) Line {
+	return Line{Event: &event, PhaseID: event.PhaseID}
+}
+
+// DiagnosticLine preserves the child source and owning phase of unstructured output.
+func DiagnosticLine(source, phaseID, text string) Line {
+	return Line{Text: text, Source: source, PhaseID: phaseID}
+}
+
+// DisplayText renders typed events and attributed diagnostics consistently.
+func (l Line) DisplayText() string {
+	if l.Event != nil {
+		return l.Event.HumanLine()
+	}
+	if l.Source != "" && l.PhaseID != "" {
+		return l.Source + "/" + l.PhaseID + " — " + l.Text
+	}
+	if l.Source != "" {
+		return l.Source + " — " + l.Text
+	}
+	return l.Text
 }
 
 type CommandLineFormatter func(CommandSpec) string
@@ -95,7 +122,7 @@ func StreamTaskTo(ctx context.Context, runner Runner, task Task, writer io.Write
 			if line.Done {
 				return nil
 			}
-			if _, err := io.WriteString(writer, line.Text+"\n"); err != nil {
+			if _, err := io.WriteString(writer, line.DisplayText()+"\n"); err != nil {
 				return err
 			}
 		}

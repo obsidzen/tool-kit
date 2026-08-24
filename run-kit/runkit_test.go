@@ -1,11 +1,58 @@
 package runkit
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"io"
 	"strings"
 	"testing"
 )
+
+func TestEventContractAndRenderers(t *testing.T) {
+	event := Event{
+		EventID: "database-check-planned",
+		Tool:    "example-check",
+		Command: "database",
+		PhaseID: "database",
+		Status:  StatusPlanned,
+		Message: "Check database schema",
+		Current: 1,
+		Total:   3,
+	}
+	if err := event.Validate(); err != nil {
+		t.Fatal(err)
+	}
+	const want = "planned database — Check database schema"
+	if got := EventLine(event).DisplayText(); got != want {
+		t.Fatalf("display = %q, want %q", got, want)
+	}
+	var out bytes.Buffer
+	if err := WriteEventJSON(&out, event); err != nil {
+		t.Fatal(err)
+	}
+	var decoded Event
+	if err := json.Unmarshal(out.Bytes(), &decoded); err != nil {
+		t.Fatal(err)
+	}
+	if decoded.Status != StatusPlanned || decoded.PhaseID != "database" || decoded.Total != 3 {
+		t.Fatalf("decoded event = %#v", decoded)
+	}
+}
+
+func TestFailedEventRequiresErrorCode(t *testing.T) {
+	event := Event{PhaseID: "database", Status: StatusFailed, Message: "Database check failed"}
+	if err := event.Validate(); err == nil {
+		t.Fatal("failed event without error code was accepted")
+	}
+}
+
+func TestDiagnosticLinePreservesSourceAndPhase(t *testing.T) {
+	line := DiagnosticLine("postgres", "database", "schema mismatch")
+	if got, want := line.DisplayText(), "postgres/database — schema mismatch"; got != want {
+		t.Fatalf("display = %q, want %q", got, want)
+	}
+}
 
 type fakeRunner struct {
 	output string

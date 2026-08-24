@@ -10,6 +10,10 @@ Injectable process runner module for obsidzen Go tools. Production code uses `Ex
 - `runkit.Task` — one user action backed by a single command, a command sequence, or a Go stream function. `Description` is the one-line menu text; `Detail` is for TUI/CLI detail help.
 - `runkit.Runner` — `Run`, `Stream`
 - `runkit.ExecRunner` — default `os/exec` implementation
+- `runkit.Event`, `EventStatus` — renderer-independent lifecycle events shared by CLI, TUI, and JSON output
+- `runkit.EventLine`, `DiagnosticLine`, `Line.DisplayText` — consistent display for typed events and child
+  diagnostics that retain source and phase
+- `runkit.WriteEventJSON` — validate and write a newline-delimited JSON event
 - `runkit.MergeEnv(map[string]string)` — merge overrides into the current environment
 - `runkit.StreamTo(ctx, runner, spec, writer)` — stream command output to a writer
 - `runkit.StreamLines(ctx, runner, spec)` — convert command output into a line channel for TUI tail screens
@@ -59,6 +63,26 @@ task := runkit.Task{
     },
 }
 ```
+
+Use a typed event when CLI and TUI must show the same status and JSON evidence is
+also required.
+
+```go
+event := runkit.Event{
+    EventID: "database-check-running",
+    Tool:    "example-check",
+    Command: "database",
+    PhaseID: "database",
+    Status:  runkit.StatusRunning,
+    Message: "Check database schema",
+}
+line := runkit.EventLine(event)
+fmt.Fprintln(os.Stdout, line.DisplayText())
+```
+
+Statuses are limited to `planned`, `running`, `passed`, `failed`, `skipped`, and
+`not-applicable`. Failed events require a stable `ErrorCode`. Renderers own status
+icons, colors, and spinners; they do not belong in `Message`.
 
 Use a formatter when the displayed command line may include secret arguments.
 

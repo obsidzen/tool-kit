@@ -10,6 +10,10 @@ obsidzen Go 도구가 외부 프로세스를 실행할 때 쓰는 **주입형 Ru
 - `runkit.Task` — 하나의 사용자 action에 대응하는 단일 command, command sequence, 또는 Go stream function. `Description`은 메뉴 한 줄 설명, `Detail`은 TUI/CLI 상세 설명에 쓴다.
 - `runkit.Runner` — `Run`, `Stream`
 - `runkit.ExecRunner` — `os/exec` 기반 기본 구현
+- `runkit.Event`, `EventStatus` — CLI/TUI/JSON이 공유하는 renderer-independent lifecycle event
+- `runkit.EventLine`, `DiagnosticLine`, `Line.DisplayText` — typed event와 source/phase가 있는 child diagnostic을
+  기존 task stream에서 일관되게 표시
+- `runkit.WriteEventJSON` — 검증된 event를 newline-delimited JSON으로 출력
 - `runkit.MergeEnv(map[string]string)` — 현재 환경에 override를 병합
 - `runkit.StreamTo(ctx, runner, spec, writer)` — stream command output to a writer
 - `runkit.StreamLines(ctx, runner, spec)` — command output을 line channel로 변환해 TUI tail 화면에 연결
@@ -60,6 +64,24 @@ task := runkit.Task{
     },
 }
 ```
+
+CLI와 TUI에 같은 상태를 표시하고 JSON 증거도 남겨야 하면 typed event를 사용한다.
+
+```go
+event := runkit.Event{
+    EventID: "database-check-running",
+    Tool:    "example-check",
+    Command: "database",
+    PhaseID: "database",
+    Status:  runkit.StatusRunning,
+    Message: "Check database schema",
+}
+line := runkit.EventLine(event)
+fmt.Fprintln(os.Stdout, line.DisplayText())
+```
+
+status는 `planned`, `running`, `passed`, `failed`, `skipped`, `not-applicable`로 고정된다. failed event는
+stable `ErrorCode`가 필수다. 상태 icon·색·spinner는 renderer가 소유하며 `Message`에 넣지 않는다.
 
 TUI에서 실행 command를 보여줄 때 secret 인자가 있으면 formatter를 넘긴다.
 
