@@ -7,7 +7,8 @@
 ## Modules
 
 - `cli-kit`: Cobra 기반 CLI 공통부. root/subcommand 생성, `menu` 진입점, shell completion, flag completion, args/flag validation을 담당한다.
-- `run-kit`: 외부 프로세스 실행 공통부. `Runner`/`CommandSpec` 주입 경계와 `ExecRunner` 기본 구현을 담당한다.
+- `run-kit`: 외부 프로세스 실행 공통부. `Runner`/`CommandSpec` 주입 경계, `ExecRunner`와
+  CLI/TUI/JSON 공통 typed event를 담당한다.
 - `tui-kit`: Bubble Tea/Bubbles 기반 TUI 공통부. Bubble Tea 타입 alias, 실행기, 테마, 화면 프레임, component adapter, key helper, reusable model을 담당한다.
 
 ## Import Paths

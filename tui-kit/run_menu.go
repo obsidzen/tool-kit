@@ -317,7 +317,7 @@ func waitRunMenuLine(lines <-chan runkit.Line) Cmd {
 		if !ok {
 			return runMenuLineMsg{done: true, lines: lines}
 		}
-		return runMenuLineMsg{text: line.Text, err: line.Err, done: line.Done, lines: lines}
+		return runMenuLineMsg{text: line.DisplayText(), err: line.Err, done: line.Done, lines: lines}
 	}
 }
 

@@ -24,6 +24,8 @@ obsidzen CLI 도구(Go + Bubble Tea)가 공유하는 **TUI 부품** 모듈. Bubb
 - `tuikit.SelectItemsFromStrings`, `SelectFromStrings`, `SelectItemsFromActions` — 문자열/action 목록을 선택 모델로 변환
 - `tuikit.TextScreen(...)`, `tuikit.TailScreen(...)`, `tuikit.TrimLines(...)` — 읽기 전용/로그 tail 화면 헬퍼
 - `tuikit.RunTaskMenu(title, tasks)`, `RunTaskMenuWithVersion(title, version, tasks)`, `RunTaskMenuWithVersionAndCatalog(title, version, tasks, catalog)`, `RunTaskMenuWithVersionCatalogLanguage(title, version, tasks, catalog, language)`, `NewRunMenuModel(...)` — `run-kit` task 목록을 선택하고 실행 로그를 tail 화면으로 표시하는 공통 Bubble Tea model. version은 home footer에 표시하고, catalog가 있으면 `l` 키로 언어를 선택한다. `?`는 선택한 task의 상세 설명을 연다.
+- `RunMenuModel`은 `runkit.EventLine`을 CLI와 같은 `Line.DisplayText` 경로로 렌더링한다. domain message에
+  별도 TUI 상태 prefix나 icon을 넣지 않는다.
 - `tuikit.IsQuitKey/IsBackKey/IsUpKey/IsDownKey` — 공통 키 판정 helper
 - `tuikit.HelpSelectRunQuit`, `HelpEnterEscQuit`, `HelpEnterOpenEscQuit`, `HelpAnyHomeQuit` — 공통 help 문구
 - reusable models:

@@ -9,7 +9,8 @@ Shared Go modules for building small operational CLI/TUI tools.
 ## Modules
 
 - `cli-kit`: Cobra-based CLI helpers for root/subcommand construction, `menu` entrypoints, shell completion, flag completion, and args/flag validation.
-- `run-kit`: process execution helpers, including `Runner`, `CommandSpec`, task execution, and streaming boundaries.
+- `run-kit`: process execution helpers, including `Runner`, `CommandSpec`, task execution, streaming boundaries,
+  and typed events shared by CLI, TUI, and JSON output.
 - `tui-kit`: Bubble Tea/Bubbles-based TUI helpers, including type aliases, runners, theme, screen frame, component adapters, key helpers, and reusable models.
 
 ## Import Paths
