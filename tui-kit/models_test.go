@@ -60,9 +60,10 @@ func TestTailModelAppendTrims(t *testing.T) {
 func TestRunMenuUsesSharedEventRendering(t *testing.T) {
 	lines := make(chan runkit.Line, 1)
 	lines <- runkit.EventLine(runkit.Event{
-		PhaseID: "database",
-		Status:  runkit.StatusRunning,
-		Message: "Check database schema",
+		SchemaVersion: runkit.EventSchemaVersion,
+		PhaseID:       "database",
+		Status:        runkit.StatusRunning,
+		Message:       "Check database schema",
 	})
 	close(lines)
 	msg := waitRunMenuLine(lines)().(runMenuLineMsg)

@@ -11,6 +11,7 @@ Injectable process runner module for obsidzen Go tools. Production code uses `Ex
 - `runkit.Runner` — `Run`, `Stream`
 - `runkit.ExecRunner` — default `os/exec` implementation
 - `runkit.Event`, `EventStatus` — renderer-independent lifecycle events shared by CLI, TUI, and JSON output
+- `runkit.EventSchemaVersion`, `EventJSONSchema` — required schema version and embedded JSON Schema
 - `runkit.EventLine`, `DiagnosticLine`, `Line.DisplayText` — consistent display for typed events and child
   diagnostics that retain source and phase
 - `runkit.WriteEventJSON` — validate and write a newline-delimited JSON event
@@ -69,6 +70,7 @@ also required.
 
 ```go
 event := runkit.Event{
+    SchemaVersion: runkit.EventSchemaVersion,
     EventID: "database-check-running",
     Tool:    "example-check",
     Command: "database",
@@ -81,8 +83,9 @@ fmt.Fprintln(os.Stdout, line.DisplayText())
 ```
 
 Statuses are limited to `planned`, `running`, `passed`, `failed`, `skipped`, and
-`not-applicable`. Failed events require a stable `ErrorCode`. Renderers own status
-icons, colors, and spinners; they do not belong in `Message`.
+`not-applicable`. Failed events require a stable `ErrorCode`. `SchemaVersion` must
+equal the current `EventSchemaVersion`; missing and unsupported versions fail.
+Renderers own status icons, colors, and spinners; they do not belong in `Message`.
 
 Use a formatter when the displayed command line may include secret arguments.
 

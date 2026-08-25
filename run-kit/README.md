@@ -11,6 +11,7 @@ obsidzen Go 도구가 외부 프로세스를 실행할 때 쓰는 **주입형 Ru
 - `runkit.Runner` — `Run`, `Stream`
 - `runkit.ExecRunner` — `os/exec` 기반 기본 구현
 - `runkit.Event`, `EventStatus` — CLI/TUI/JSON이 공유하는 renderer-independent lifecycle event
+- `runkit.EventSchemaVersion`, `EventJSONSchema` — 필수 schema version과 내장 JSON Schema
 - `runkit.EventLine`, `DiagnosticLine`, `Line.DisplayText` — typed event와 source/phase가 있는 child diagnostic을
   기존 task stream에서 일관되게 표시
 - `runkit.WriteEventJSON` — 검증된 event를 newline-delimited JSON으로 출력
@@ -69,6 +70,7 @@ CLI와 TUI에 같은 상태를 표시하고 JSON 증거도 남겨야 하면 type
 
 ```go
 event := runkit.Event{
+    SchemaVersion: runkit.EventSchemaVersion,
     EventID: "database-check-running",
     Tool:    "example-check",
     Command: "database",
@@ -81,7 +83,8 @@ fmt.Fprintln(os.Stdout, line.DisplayText())
 ```
 
 status는 `planned`, `running`, `passed`, `failed`, `skipped`, `not-applicable`로 고정된다. failed event는
-stable `ErrorCode`가 필수다. 상태 icon·색·spinner는 renderer가 소유하며 `Message`에 넣지 않는다.
+stable `ErrorCode`가 필수다. `SchemaVersion`은 현재 `EventSchemaVersion`으로 명시해야 하며 구형 또는
+누락된 version은 실패한다. 상태 icon·색·spinner는 renderer가 소유하며 `Message`에 넣지 않는다.
 
 TUI에서 실행 command를 보여줄 때 secret 인자가 있으면 formatter를 넘긴다.
 

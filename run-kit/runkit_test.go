@@ -11,14 +11,15 @@ import (
 
 func TestEventContractAndRenderers(t *testing.T) {
 	event := Event{
-		EventID: "database-check-planned",
-		Tool:    "example-check",
-		Command: "database",
-		PhaseID: "database",
-		Status:  StatusPlanned,
-		Message: "Check database schema",
-		Current: 1,
-		Total:   3,
+		SchemaVersion: EventSchemaVersion,
+		EventID:       "database-check-planned",
+		Tool:          "example-check",
+		Command:       "database",
+		PhaseID:       "database",
+		Status:        StatusPlanned,
+		Message:       "Check database schema",
+		Current:       1,
+		Total:         3,
 	}
 	if err := event.Validate(); err != nil {
 		t.Fatal(err)
@@ -40,8 +41,32 @@ func TestEventContractAndRenderers(t *testing.T) {
 	}
 }
 
+func TestEventRequiresCurrentSchemaVersion(t *testing.T) {
+	for _, version := range []string{"", "2"} {
+		event := Event{SchemaVersion: version, PhaseID: "database", Status: StatusPassed, Message: "Database check passed"}
+		if err := event.Validate(); err == nil {
+			t.Fatalf("schema version %q was accepted", version)
+		}
+	}
+}
+
+func TestEventJSONSchemaIsEmbeddedAndIndependent(t *testing.T) {
+	first := EventJSONSchema()
+	var schema map[string]any
+	if err := json.Unmarshal(first, &schema); err != nil {
+		t.Fatal(err)
+	}
+	if schema["title"] != "Tool Event v1" {
+		t.Fatalf("schema title = %#v", schema["title"])
+	}
+	first[0] = 'x'
+	if !json.Valid(EventJSONSchema()) {
+		t.Fatal("caller mutation changed the embedded schema")
+	}
+}
+
 func TestFailedEventRequiresErrorCode(t *testing.T) {
-	event := Event{PhaseID: "database", Status: StatusFailed, Message: "Database check failed"}
+	event := Event{SchemaVersion: EventSchemaVersion, PhaseID: "database", Status: StatusFailed, Message: "Database check failed"}
 	if err := event.Validate(); err == nil {
 		t.Fatal("failed event without error code was accepted")
 	}
