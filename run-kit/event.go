@@ -1,11 +1,17 @@
 package runkit
 
 import (
+	"embed"
 	"encoding/json"
 	"fmt"
 	"io"
 	"strings"
 )
+
+const EventSchemaVersion = "1"
+
+//go:embed schema/tool-event.v1.schema.json
+var eventSchemaFS embed.FS
 
 // EventStatus is a stable lifecycle state shared by CLI, TUI, and structured output.
 type EventStatus string
@@ -21,22 +27,26 @@ const (
 
 // Event is a renderer-independent task lifecycle or result record.
 type Event struct {
-	EventID   string      `json:"eventId,omitempty"`
-	Tool      string      `json:"tool,omitempty"`
-	Command   string      `json:"command,omitempty"`
-	PhaseID   string      `json:"phaseId"`
-	Status    EventStatus `json:"status"`
-	Message   string      `json:"message"`
-	Detail    string      `json:"detail,omitempty"`
-	ElapsedMS int64       `json:"elapsedMs,omitempty"`
-	ErrorCode string      `json:"errorCode,omitempty"`
-	Attempt   int         `json:"attempt,omitempty"`
-	Current   int         `json:"current,omitempty"`
-	Total     int         `json:"total,omitempty"`
+	SchemaVersion string      `json:"schemaVersion"`
+	EventID       string      `json:"eventId,omitempty"`
+	Tool          string      `json:"tool,omitempty"`
+	Command       string      `json:"command,omitempty"`
+	PhaseID       string      `json:"phaseId"`
+	Status        EventStatus `json:"status"`
+	Message       string      `json:"message"`
+	Detail        string      `json:"detail,omitempty"`
+	ElapsedMS     int64       `json:"elapsedMs,omitempty"`
+	ErrorCode     string      `json:"errorCode,omitempty"`
+	Attempt       int         `json:"attempt,omitempty"`
+	Current       int         `json:"current,omitempty"`
+	Total         int         `json:"total,omitempty"`
 }
 
 // Validate checks the required event contract without rendering it.
 func (e Event) Validate() error {
+	if e.SchemaVersion != EventSchemaVersion {
+		return fmt.Errorf("unsupported event schema version: %q", e.SchemaVersion)
+	}
 	if strings.TrimSpace(e.PhaseID) == "" {
 		return fmt.Errorf("event phase ID is required")
 	}
@@ -58,6 +68,15 @@ func (e Event) Validate() error {
 		return fmt.Errorf("event progress current cannot exceed total")
 	}
 	return nil
+}
+
+// EventJSONSchema returns an independent copy of the versioned event JSON Schema.
+func EventJSONSchema() []byte {
+	schema, err := eventSchemaFS.ReadFile("schema/tool-event.v1.schema.json")
+	if err != nil {
+		panic(err)
+	}
+	return schema
 }
 
 // HumanLine renders the stable status, phase, and message fields as one line.

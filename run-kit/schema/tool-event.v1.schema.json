@@ -1,0 +1,91 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/obsidzen/tool-kit/run-kit/schema/tool-event.v1.schema.json",
+  "title": "Tool Event v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "phaseId",
+    "status",
+    "message"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "1"
+    },
+    "eventId": {
+      "type": "string"
+    },
+    "tool": {
+      "type": "string"
+    },
+    "command": {
+      "type": "string"
+    },
+    "phaseId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "status": {
+      "enum": [
+        "planned",
+        "running",
+        "passed",
+        "failed",
+        "skipped",
+        "not-applicable"
+      ]
+    },
+    "message": {
+      "type": "string",
+      "minLength": 1
+    },
+    "detail": {
+      "type": "string"
+    },
+    "elapsedMs": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "errorCode": {
+      "type": "string"
+    },
+    "attempt": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "current": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "total": {
+      "type": "integer",
+      "minimum": 0
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "failed"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "then": {
+        "required": [
+          "errorCode"
+        ],
+        "properties": {
+          "errorCode": {
+            "minLength": 1
+          }
+        }
+      }
+    }
+  ]
+}
