@@ -8,13 +8,32 @@ import (
 	"strings"
 )
 
-const EventSchemaVersion = "1"
+const EventSchemaVersion = "2"
 
-//go:embed schema/tool-event.v1.schema.json
+//go:embed schema/tool-event.v2.schema.json
 var eventSchemaFS embed.FS
 
 // EventStatus is a stable lifecycle state shared by CLI, TUI, and structured output.
 type EventStatus string
+
+// ErrorCode is a stable, renderer-independent failure identifier.
+type ErrorCode string
+
+// Attempt is a one-based execution attempt number.
+type Attempt uint
+
+// ProgressCount is a non-negative progress position or denominator.
+type ProgressCount uint
+
+// ProgressUnit names the concrete items counted by progress.
+type ProgressUnit string
+
+// Progress records a current position against an explicit denominator.
+type Progress struct {
+	Current ProgressCount `json:"current"`
+	Total   ProgressCount `json:"total"`
+	Unit    ProgressUnit  `json:"unit"`
+}
 
 const (
 	StatusPlanned       EventStatus = "planned"
@@ -36,10 +55,9 @@ type Event struct {
 	Message       string      `json:"message"`
 	Detail        string      `json:"detail,omitempty"`
 	ElapsedMS     int64       `json:"elapsedMs,omitempty"`
-	ErrorCode     string      `json:"errorCode,omitempty"`
-	Attempt       int         `json:"attempt,omitempty"`
-	Current       int         `json:"current,omitempty"`
-	Total         int         `json:"total,omitempty"`
+	ErrorCode     ErrorCode   `json:"errorCode,omitempty"`
+	Attempt       Attempt     `json:"attempt,omitempty"`
+	Progress      *Progress   `json:"progress,omitempty"`
 }
 
 // Validate checks the required event contract without rendering it.
@@ -58,25 +76,63 @@ func (e Event) Validate() error {
 	default:
 		return fmt.Errorf("unsupported event status: %q", e.Status)
 	}
-	if e.Status == StatusFailed && strings.TrimSpace(e.ErrorCode) == "" {
+	if e.Status == StatusFailed && strings.TrimSpace(string(e.ErrorCode)) == "" {
 		return fmt.Errorf("failed event error code is required")
 	}
-	if e.Attempt < 0 || e.Current < 0 || e.Total < 0 || e.ElapsedMS < 0 {
-		return fmt.Errorf("event counters and elapsed time cannot be negative")
+	if e.ErrorCode != "" && !isKebabCase(string(e.ErrorCode)) {
+		return fmt.Errorf("event error code must be kebab-case")
 	}
-	if e.Total > 0 && e.Current > e.Total {
-		return fmt.Errorf("event progress current cannot exceed total")
+	if e.Status != StatusPlanned && e.Status != StatusSkipped && e.Status != StatusNotApplicable && e.Attempt == 0 {
+		return fmt.Errorf("executed event attempt must start at one")
+	}
+	if (e.Status == StatusPlanned || e.Status == StatusSkipped || e.Status == StatusNotApplicable) && e.Attempt != 0 {
+		return fmt.Errorf("unexecuted event cannot have an attempt")
+	}
+	if e.ElapsedMS < 0 {
+		return fmt.Errorf("event elapsed time cannot be negative")
+	}
+	if e.Progress != nil {
+		if e.Progress.Total == 0 {
+			return fmt.Errorf("event progress total must be greater than zero")
+		}
+		if e.Progress.Current > e.Progress.Total {
+			return fmt.Errorf("event progress current cannot exceed total")
+		}
+		if !isKebabCase(string(e.Progress.Unit)) {
+			return fmt.Errorf("event progress unit must be kebab-case")
+		}
 	}
 	return nil
 }
 
 // EventJSONSchema returns an independent copy of the versioned event JSON Schema.
 func EventJSONSchema() []byte {
-	schema, err := eventSchemaFS.ReadFile("schema/tool-event.v1.schema.json")
+	schema, err := eventSchemaFS.ReadFile("schema/tool-event.v2.schema.json")
 	if err != nil {
 		panic(err)
 	}
 	return schema
+}
+
+func isKebabCase(value string) bool {
+	if value == "" || value[0] == '-' || value[len(value)-1] == '-' {
+		return false
+	}
+	previousHyphen := false
+	for _, character := range value {
+		if character == '-' {
+			if previousHyphen {
+				return false
+			}
+			previousHyphen = true
+			continue
+		}
+		if character < 'a' || character > 'z' {
+			return false
+		}
+		previousHyphen = false
+	}
+	return true
 }
 
 // HumanLine renders the stable status, phase, and message fields as one line.

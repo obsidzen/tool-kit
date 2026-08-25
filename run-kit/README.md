@@ -77,14 +77,18 @@ event := runkit.Event{
     PhaseID: "database",
     Status:  runkit.StatusRunning,
     Message: "Check database schema",
+    Attempt: 1,
+    Progress: &runkit.Progress{Current: 1, Total: 3, Unit: "phases"},
 }
 line := runkit.EventLine(event)
 fmt.Fprintln(os.Stdout, line.DisplayText())
 ```
 
-status는 `planned`, `running`, `passed`, `failed`, `skipped`, `not-applicable`로 고정된다. failed event는
-stable `ErrorCode`가 필수다. `SchemaVersion`은 현재 `EventSchemaVersion`으로 명시해야 하며 구형 또는
-누락된 version은 실패한다. 상태 icon·색·spinner는 renderer가 소유하며 `Message`에 넣지 않는다.
+status는 `planned`, `running`, `passed`, `failed`, `skipped`, `not-applicable`로 고정된다. 실행 event는
+1부터 시작하는 typed `Attempt`가 필요하고 failed event는 stable `ErrorCode`가 필수다. 진행률은
+`Progress`의 current, total, unit을 함께 사용해 분모의 의미를 명시한다. `SchemaVersion`은 현재
+`EventSchemaVersion`으로 명시해야 하며 구형 또는 누락된 version은 실패한다. 상태 icon·색·spinner는
+renderer가 소유하며 `Message`에 넣지 않는다.
 
 TUI에서 실행 command를 보여줄 때 secret 인자가 있으면 formatter를 넘긴다.
 

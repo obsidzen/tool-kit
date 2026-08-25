@@ -77,13 +77,17 @@ event := runkit.Event{
     PhaseID: "database",
     Status:  runkit.StatusRunning,
     Message: "Check database schema",
+    Attempt: 1,
+    Progress: &runkit.Progress{Current: 1, Total: 3, Unit: "phases"},
 }
 line := runkit.EventLine(event)
 fmt.Fprintln(os.Stdout, line.DisplayText())
 ```
 
 Statuses are limited to `planned`, `running`, `passed`, `failed`, `skipped`, and
-`not-applicable`. Failed events require a stable `ErrorCode`. `SchemaVersion` must
+`not-applicable`. Executed events require a typed `Attempt` starting at one, and
+failed events require a stable `ErrorCode`. Progress uses `Progress` with current,
+total, and unit together so the denominator is explicit. `SchemaVersion` must
 equal the current `EventSchemaVersion`; missing and unsupported versions fail.
 Renderers own status icons, colors, and spinners; they do not belong in `Message`.
 
