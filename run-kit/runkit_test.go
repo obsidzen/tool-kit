@@ -18,8 +18,7 @@ func TestEventContractAndRenderers(t *testing.T) {
 		PhaseID:       "database",
 		Status:        StatusPlanned,
 		Message:       "Check database schema",
-		Current:       1,
-		Total:         3,
+		Progress:      &Progress{Current: 1, Total: 3, Unit: "phases"},
 	}
 	if err := event.Validate(); err != nil {
 		t.Fatal(err)
@@ -36,14 +35,14 @@ func TestEventContractAndRenderers(t *testing.T) {
 	if err := json.Unmarshal(out.Bytes(), &decoded); err != nil {
 		t.Fatal(err)
 	}
-	if decoded.Status != StatusPlanned || decoded.PhaseID != "database" || decoded.Total != 3 {
+	if decoded.Status != StatusPlanned || decoded.PhaseID != "database" || decoded.Progress == nil || decoded.Progress.Total != 3 {
 		t.Fatalf("decoded event = %#v", decoded)
 	}
 }
 
 func TestEventRequiresCurrentSchemaVersion(t *testing.T) {
-	for _, version := range []string{"", "2"} {
-		event := Event{SchemaVersion: version, PhaseID: "database", Status: StatusPassed, Message: "Database check passed"}
+	for _, version := range []string{"", "1", "3"} {
+		event := Event{SchemaVersion: version, PhaseID: "database", Status: StatusPassed, Message: "Database check passed", Attempt: 1}
 		if err := event.Validate(); err == nil {
 			t.Fatalf("schema version %q was accepted", version)
 		}
@@ -56,7 +55,7 @@ func TestEventJSONSchemaIsEmbeddedAndIndependent(t *testing.T) {
 	if err := json.Unmarshal(first, &schema); err != nil {
 		t.Fatal(err)
 	}
-	if schema["title"] != "Tool Event v1" {
+	if schema["title"] != "Tool Event v2" {
 		t.Fatalf("schema title = %#v", schema["title"])
 	}
 	first[0] = 'x'
@@ -66,9 +65,38 @@ func TestEventJSONSchemaIsEmbeddedAndIndependent(t *testing.T) {
 }
 
 func TestFailedEventRequiresErrorCode(t *testing.T) {
-	event := Event{SchemaVersion: EventSchemaVersion, PhaseID: "database", Status: StatusFailed, Message: "Database check failed"}
+	event := Event{SchemaVersion: EventSchemaVersion, PhaseID: "database", Status: StatusFailed, Message: "Database check failed", Attempt: 1}
 	if err := event.Validate(); err == nil {
 		t.Fatal("failed event without error code was accepted")
+	}
+}
+
+func TestExecutedEventRequiresAttempt(t *testing.T) {
+	event := Event{SchemaVersion: EventSchemaVersion, PhaseID: "database", Status: StatusRunning, Message: "Check database"}
+	if err := event.Validate(); err == nil {
+		t.Fatal("running event without an attempt was accepted")
+	}
+}
+
+func TestProgressRequiresExplicitDenominatorAndUnit(t *testing.T) {
+	tests := []Progress{
+		{Current: 1, Total: 0, Unit: "phases"},
+		{Current: 2, Total: 1, Unit: "phases"},
+		{Current: 1, Total: 1},
+		{Current: 1, Total: 1, Unit: "API operations"},
+	}
+	for _, progress := range tests {
+		event := Event{
+			SchemaVersion: EventSchemaVersion,
+			PhaseID:       "database",
+			Status:        StatusRunning,
+			Message:       "Check database",
+			Attempt:       1,
+			Progress:      &progress,
+		}
+		if err := event.Validate(); err == nil {
+			t.Fatalf("invalid progress was accepted: %+v", progress)
+		}
 	}
 }
 
