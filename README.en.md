@@ -37,6 +37,8 @@ go get github.com/obsidzen/tool-kit/tui-kit@v0.1.0
 ./scripts/ci.sh
 ```
 
+Run `./scripts/setup.sh` after cloning. Commits run fast checks; pre-push runs the full CI. Run full CI before task completion as well. See the [Git hook explanation](docs/hooks/pre-commit.md).
+
 See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution rules and [SECURITY.md](SECURITY.md) for vulnerability reporting.
 
 ## Structure

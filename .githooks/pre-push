@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+exec mise exec -- prek run --hook-stage pre-push --all-files

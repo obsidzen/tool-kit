@@ -1,0 +1,43 @@
+minimum_prek_version: "0.5.10"
+default_install_hook_types: [pre-commit, commit-msg, pre-push]
+repos:
+  - repo: builtin
+    hooks:
+      - id: deny-filename-pattern
+        name: Block secret filenames
+        args: ["-i", '^\.env($|\.)|\.(pem|key)$|^id_(rsa|ed25519)$']
+        stages: [pre-commit]
+      - id: check-added-large-files
+        args: ["--maxkb=5120", "--enforce-all"]
+        stages: [pre-commit]
+      - id: detect-private-key
+        stages: [pre-commit]
+      - id: deny-pattern
+        name: Block AI attribution footers
+        args:
+          [
+            "-i",
+            'co-authored-by:[[:space:]].*(claude|anthropic|gpt|copilot|gemini)|generated with \[?(claude|chatgpt|copilot)',
+          ]
+        stages: [commit-msg]
+  - repo: local
+    hooks:
+      - id: gitleaks
+        name: Scan staged secrets
+        language: system
+        entry: mise exec -- gitleaks git --pre-commit --redact --staged --verbose
+        pass_filenames: false
+        always_run: true
+        stages: [pre-commit]
+      - id: committed
+        name: Check commit message
+        language: system
+        entry: mise exec -- committed --config committed.toml --commit-file
+        stages: [commit-msg]
+      - id: full-ci
+        name: Run full repository CI
+        language: system
+        entry: bash scripts/ci.sh
+        pass_filenames: false
+        always_run: true
+        stages: [pre-push]

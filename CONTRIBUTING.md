@@ -16,6 +16,8 @@
 ./scripts/ci.sh
 ```
 
+`./scripts/setup.sh`로 고정 도구와 hook을 준비한다. 커밋 전에는 빠른 검사, push 전에는 전체 CI를 실행한다. Merge·Revert·fixup 등 자동 제목은 예외로 통과하지 않으므로 필요한 작업은 Conventional Commits 제목으로 작성한다. AI 작성 푸터는 금지한다. [Hook 설명](docs/hooks/commit-msg.md)을 참고한다.
+
 ## Definition of Done
 
 PR을 열기 전에 다음을 확인한다.

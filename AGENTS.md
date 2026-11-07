@@ -24,6 +24,8 @@ Go 1.26 multi-module repo for shared CLI/TUI building blocks:
 - [ ] Module paths and tag examples remain aligned with `github.com/obsidzen/tool-kit/<kit>`.
 - [ ] `AGENTS.md` still matches the actual structure, commands, and testing approach.
 
+Git verification uses the pinned prek, Gitleaks and committed from `mise.toml`. Run `./scripts/setup.sh` after cloning. Commit hooks check staged secrets, filenames, file size and message format; pre-push runs the full `./scripts/ci.sh`. Task completion still requires full CI even without a push. All commit titles, including merge and revert messages, use Conventional Commits; no automatic-title exception applies. Hook explanations: [pre-commit](docs/hooks/pre-commit.md), [commit-msg](docs/hooks/commit-msg.md), [pre-push](docs/hooks/pre-push.md).
+
 ## Project Structure
 
 ```text

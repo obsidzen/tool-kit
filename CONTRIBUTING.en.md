@@ -18,6 +18,8 @@ This document defines the human-facing contribution rules for `tool-kit`. AI age
 ./scripts/ci.sh
 ```
 
+Run `./scripts/setup.sh` to prepare pinned tools and hooks. Commits run fast checks; pre-push runs full CI. Automatic Merge, Revert and fixup titles have no exemption; use Conventional Commits titles for the intended operation. AI attribution footers are prohibited. See the [hook explanation](docs/hooks/commit-msg.md).
+
 ## Definition of Done
 
 Before opening a PR, check:
