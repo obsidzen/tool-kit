@@ -35,7 +35,7 @@ go get github.com/obsidzen/tool-kit/tui-kit@v0.1.0
 ./scripts/ci.sh
 ```
 
-초기 설정은 `./scripts/setup.sh`로 수행한다. 커밋에는 빠른 검사, push 전에는 전체 CI가 실행된다. 작업 완료 시에도 전체 CI를 실행한다. [Git hook 설명](docs/hooks/pre-commit.md)을 참고한다.
+도구 요구 버전은 `mise.toml`, 실제 버전은 `mise.lock`으로 관리한다. mise 2026.11.5 이상에서 잠금 파일을 기준으로 설치한다. 초기 설정은 `./scripts/setup.sh`로 수행한다. 커밋에는 빠른 검사, push 전에는 전체 CI가 실행된다. 작업 완료 시에도 전체 CI를 실행한다. [Git hook 설명](docs/hooks/pre-commit.md)을 참고한다.
 
 기여 절차는 [CONTRIBUTING.md](CONTRIBUTING.md), 보안 신고는 [SECURITY.md](SECURITY.md)를 따른다.
 

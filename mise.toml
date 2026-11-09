@@ -1,6 +1,11 @@
+min_version = "2026.11.5"
+
 # tool-kit development tool versions.
 [tools]
 go = "1.26"
 prek = "0.5.10"
 gitleaks = "8.30.1"
 committed = "1.1.12"
+
+[settings]
+lockfile = true

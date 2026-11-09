@@ -46,7 +46,7 @@ Root files:
 - `SECURITY.en.md`: English security reporting policy translation.
 - `LICENSE`: MIT license.
 - `go.work`: local multi-module development workspace.
-- `mise.toml`: tool versions.
+- `mise.toml` and `mise.lock`: tool requirements and resolved versions.
 - `.gitattributes`: line-ending and binary normalization.
 
 ## Code Style

@@ -33,6 +33,8 @@ go get github.com/obsidzen/tool-kit/tui-kit@v0.1.0
 
 ## Development
 
+Tool requirements live in `mise.toml`; `mise.lock` records the selected versions. Use mise 2026.11.5 or newer and run `./scripts/setup.sh` to install from the lockfile.
+
 ```sh
 ./scripts/ci.sh
 ```
