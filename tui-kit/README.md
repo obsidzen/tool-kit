@@ -76,5 +76,3 @@ catalog := tuikit.MessageCatalog{
 }
 return tuikit.RunTaskMenuWithVersionCatalogLanguage("tool", version, tasks, catalog, tuikit.LangKorean)
 ```
-
-소비자: `termux-ssh-launcher`, `aictl`, `adb-manager`, `android-app-dev`. (각 도구 `internal/tui/theme.go` 는 이 모듈을 로컬 별칭으로 재노출.)
